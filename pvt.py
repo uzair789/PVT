@@ -96,7 +96,7 @@ class Mlp(nn.Module):
         hidden_features = hidden_features or in_features
         self.fc1 = BinaryLinear(in_features, hidden_features) # nn.Linear(in_features, hidden_features)
         self.act = BinaryActivation() # act_layer()
-        self.fc2 = BinaryLinear(in_features, out_features) # nn.Linear(hidden_features, out_features)
+        self.fc2 = BinaryLinear(hidden_features, out_features) # nn.Linear(hidden_features, out_features)
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
