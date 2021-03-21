@@ -95,14 +95,17 @@ class Mlp(nn.Module):
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.fc1 = BinaryLinear(in_features, hidden_features) # nn.Linear(in_features, hidden_features)
-        self.act = BinaryActivation() # act_layer()
+        self.act = act_layer()
+        self.bin_act = BinaryActivation() # act_layer()
         self.fc2 = BinaryLinear(hidden_features, out_features) # nn.Linear(hidden_features, out_features)
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
+        x = self.bin_act(x)
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop(x)
+        x = self.bin_act(x)
         x = self.fc2(x)
         x = self.drop(x)
         return x
@@ -124,6 +127,8 @@ class Attention(nn.Module):
         self.proj = BinaryLinear(dim, dim) # nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
+        self.binary_act = BinaryActivation()
+
         self.sr_ratio = sr_ratio
         if sr_ratio > 1:
             # self.sr = nn.Conv2d(dim, dim, kernel_size=sr_ratio, stride=sr_ratio)
@@ -132,12 +137,15 @@ class Attention(nn.Module):
 
     def forward(self, x, H, W):
         B, N, C = x.shape
+        x = self.binary_act(x)
         q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
 
         if self.sr_ratio > 1:
             x_ = x.permute(0, 2, 1).reshape(B, C, H, W)
+            x_ = self.binary_act(x_)
             x_ = self.sr(x_).reshape(B, C, -1).permute(0, 2, 1)
             x_ = self.norm(x_)
+            x_ = self.binary_act(x_)
             kv = self.kv(x_).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         else:
             kv = self.kv(x).reshape(B, -1, 2, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
@@ -181,7 +189,7 @@ class PatchEmbed(nn.Module):
     """ Image to Patch Embedding
     """
 
-    def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768):
+    def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768, isBin=True):
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
@@ -192,12 +200,18 @@ class PatchEmbed(nn.Module):
             f"img_size {img_size} should be divided by patch_size {patch_size}."
         self.H, self.W = img_size[0] // patch_size[0], img_size[1] // patch_size[1]
         self.num_patches = self.H * self.W
-        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
         self.norm = nn.LayerNorm(embed_dim)
+        self.isBin = isBin
+        if self.isBin:
+            self.binary_act = BinaryActivation()
+            self.proj = HardBinaryConv(in_chans, embed_dim, kernel_size=patch_size[0], stride=patch_size)
+        else:
+            self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
 
     def forward(self, x):
         B, C, H, W = x.shape
-
+        if self.isBin:
+            x = self.binary_act(x)
         x = self.proj(x).flatten(2).transpose(1, 2)
         x = self.norm(x)
         H, W = H // self.patch_size[0], W // self.patch_size[1]
@@ -216,7 +230,7 @@ class PyramidVisionTransformer(nn.Module):
 
         # patch_embed
         self.patch_embed1 = PatchEmbed(img_size=img_size, patch_size=patch_size, in_chans=in_chans,
-                                       embed_dim=embed_dims[0])
+                                       embed_dim=embed_dims[0], isBin=False)
         self.patch_embed2 = PatchEmbed(img_size=img_size // 4, patch_size=2, in_chans=embed_dims[0],
                                        embed_dim=embed_dims[1])
         self.patch_embed3 = PatchEmbed(img_size=img_size // 8, patch_size=2, in_chans=embed_dims[1],
