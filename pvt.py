@@ -232,11 +232,11 @@ class PyramidVisionTransformer(nn.Module):
         self.patch_embed1 = PatchEmbed(img_size=img_size, patch_size=patch_size, in_chans=in_chans,
                                        embed_dim=embed_dims[0], isBin=False)
         self.patch_embed2 = PatchEmbed(img_size=img_size // 4, patch_size=2, in_chans=embed_dims[0],
-                                       embed_dim=embed_dims[1])
+                                       embed_dim=embed_dims[1], isBin=False)
         self.patch_embed3 = PatchEmbed(img_size=img_size // 8, patch_size=2, in_chans=embed_dims[1],
-                                       embed_dim=embed_dims[2])
+                                       embed_dim=embed_dims[2], isBin=False)
         self.patch_embed4 = PatchEmbed(img_size=img_size // 16, patch_size=2, in_chans=embed_dims[2],
-                                       embed_dim=embed_dims[3])
+                                       embed_dim=embed_dims[3], isBin=False)
 
         # pos_embed
         self.pos_embed1 = nn.Parameter(torch.zeros(1, self.patch_embed1.num_patches, embed_dims[0]))
