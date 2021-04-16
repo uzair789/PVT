@@ -53,11 +53,44 @@ class INatDataset(ImageFolder):
 
     # __getitem__ and __len__ inherited from ImageFolder
 
+## Added by Uzair to load the ALiProducts data
+import torch.utils.data as data
+import os
+from PIL import Image
+
+class AliProducts(data.Dataset):
+    def __init__(self, data_path, train=True, transform=None):
+        self.train = train
+        if self.train:
+            self.path_to_data = os.path.join(data_path, 'data_sept/list/train_dummy.txt')
+        else:
+            self.path_to_data = os.path.join(data_path, 'data_sept/list/val_dummy.txt')
+        self.transform = transform
+        with open(self.path_to_data, 'r') as f:
+            self.data = f.readlines()
+
+    def __getitem__(self, idx):
+        imagepath = self.data[idx].rstrip()
+        _, target, _ = imagepath.split('/')
+        imagepath = os.path.join(data_path, data_sept, imagepath)
+        print(imagepath)
+        img = Image.open(imagepath)
+        if self.train:
+            img = self.transform(img)
+
+        return img, int(target)
+        
+
 
 def build_dataset(is_train, args):
     transform = build_transform(is_train, args)
+    if args.data_set == 'AliProducts':
+        dataset = AliProducts(args.data_path, train=is_train, transform=transform)
+        nb_classes = 43043
+        
 
-    if args.data_set == 'CIFAR':
+
+    elif args.data_set == 'CIFAR':
         dataset = datasets.CIFAR100(args.data_path, train=is_train, transform=transform)
         nb_classes = 100
     elif args.data_set == 'IMNET':
