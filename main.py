@@ -26,6 +26,8 @@ import pvt
 import utils
 import collections
 
+from data_loader_borrowedFromYutong.data_loader import AliProductDataLoader
+
 
 def get_args_parser():
     parser = argparse.ArgumentParser('PVT training and evaluation script', add_help=False)
@@ -187,6 +189,7 @@ def main(args):
 
     cudnn.benchmark = True
 
+    '''
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, _ = build_dataset(is_train=False, args=args)
 
@@ -229,6 +232,28 @@ def main(args):
         pin_memory=args.pin_mem,
         drop_last=False
     )
+    '''
+    args.nb_classes = 28605
+    data_loader_train = AliProductDataLoader(
+                            data_dir='/media/Anubis/uzair/Datasets/Products/images/all/',
+                            data_list='/media/Anubis/uzair/Datasets/Products/train_clean.txt',
+                            batch_size=args.batch_size,
+                            image_size=224,
+                            sample='balance',
+                            cutout=True,
+                            auto_augment=True,
+                            warp=True,
+                            num_workers=16)
+
+    data_loader_val = AliProductDataLoader(
+                            data_dir='/media/Anubis/uzair/Datasets/Products/images/all/',
+                            data_list='/media/Anubis/uzair/Datasets/Products/valid_clean.txt',
+                            batch_size=args.batch_size,
+                            image_size=224,
+                            warp=True,
+                            num_workers=16)
+
+    
 
     mixup_fn = None
     mixup_active = args.mixup > 0 or args.cutmix > 0. or args.cutmix_minmax is not None
@@ -288,7 +313,7 @@ def main(args):
         model.load_state_dict(checkpoint_model, strict=False)
 
     model.to(device)
-
+ 
     model_ema = None
     # if args.model_ema:
     #     # Important to create EMA model after cuda(), DP wrapper, and AMP but before SyncBN and DDP wrapper
@@ -305,8 +330,9 @@ def main(args):
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print('number of params:', n_parameters)
 
-    linear_scaled_lr = args.lr * args.batch_size * utils.get_world_size() / 512.0
-    args.lr = linear_scaled_lr
+    # linear_scaled_lr = args.lr * args.batch_size * utils.get_world_size() / 512.0
+    # args.lr = linear_scaled_lr
+    print(args.lr)
     optimizer = create_optimizer(args, model_without_ddp)
     loss_scaler = NativeScaler()
 
@@ -387,8 +413,8 @@ def main(args):
         if epoch == max_epoch_dp_warm_up:
             model_without_ddp.reset_drop_path(args.drop_path)
 
-        if args.distributed:
-            data_loader_train.sampler.set_epoch(epoch)
+        #if args.distributed:
+        #    data_loader_train.sampler.set_epoch(epoch)
 
         train_stats = train_one_epoch(
             model, criterion, data_loader_train,
@@ -412,7 +438,8 @@ def main(args):
                 }, checkpoint_path)
 
         test_stats = evaluate(data_loader_val, model, device)
-        print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
+        # print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
+        print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}%")
         max_accuracy = max(max_accuracy, test_stats["acc1"])
         print(f'Max accuracy: {max_accuracy:.2f}%')
 
