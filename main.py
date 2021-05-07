@@ -233,9 +233,9 @@ def main(args):
         drop_last=False
     )
     '''
-    args.nb_classes = 28605
+    args.nb_classes = 25345
     data_loader_train = AliProductDataLoader(
-                            data_dir='/media/Anubis/uzair/Datasets/Products/images/all/',
+                            data_dir='/',
                             data_list='/media/Anubis/uzair/Datasets/Products/train_clean.txt',
                             batch_size=args.batch_size,
                             image_size=224,
@@ -246,7 +246,7 @@ def main(args):
                             num_workers=16)
 
     data_loader_val = AliProductDataLoader(
-                            data_dir='/media/Anubis/uzair/Datasets/Products/images/all/',
+                            data_dir='/',
                             data_list='/media/Anubis/uzair/Datasets/Products/valid_clean.txt',
                             batch_size=args.batch_size,
                             image_size=224,
