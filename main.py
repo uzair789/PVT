@@ -233,7 +233,7 @@ def main(args):
         drop_last=False
     )
     '''
-    args.nb_classes = 50311 
+    args.nb_classes = 50309 
     data_loader_train = AliProductDataLoader(
                             data_dir='/',
                             # data_list='/media/Anubis/uzair/Datasets/Products/train_clean.txt',
