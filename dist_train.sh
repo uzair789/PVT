@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 export NCCL_LL_THRESHOLD=0
-export CUDA_VISIBLE_DEVICES='4,5,6,7'
+export CUDA_VISIBLE_DEVICES='3,4,5,6'
 
-ARCH='pvt_small' # $1
+ARCH='pvt_large' # $1
 GPUS=4 # $2
 BATCH_SIZE=128
 EPOCHS=300
 # OUT_PATH="./checkpoints/AliProducts_pvt_classifier_batchSize_${BATCH_SIZE}_epochs${EPOCHS}" # $3
-OUT_PATH="./checkpoints/targets_pvt_classifier_batchSize_${BATCH_SIZE}_epochs${EPOCHS}_codeHyperParams_AliUnclean_plus_bottles" # $3
+OUT_PATH="./checkpoints/targets_${ARCH}_classifier_batchSize_${BATCH_SIZE}_epochs${EPOCHS}_codeHyperParams_AliUnclean_plus_bottles" # $3
 PORT=${PORT:-29500}
 # DATA_PATH='/media/Chnuphis/szq_data/imagenet'
 # DATA_PATH='/media/Anubis/uzair/Datasets/Products/AliProducts'
