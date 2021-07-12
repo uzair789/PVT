@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 export NCCL_LL_THRESHOLD=0
-export CUDA_VISIBLE_DEVICES='3,4,5,6'
+export CUDA_VISIBLE_DEVICES='0,2,3,4,5,6'
 
 ARCH='pvt_large' # $1
-GPUS=4 # $2
-BATCH_SIZE=128
+GPUS=6 # $2
+BATCH_SIZE=150
 EPOCHS=300
 # OUT_PATH="./checkpoints/AliProducts_pvt_classifier_batchSize_${BATCH_SIZE}_epochs${EPOCHS}" # $3
 OUT_PATH="./checkpoints/targets_${ARCH}_classifier_batchSize_${BATCH_SIZE}_epochs${EPOCHS}_codeHyperParams_AliUnclean_plus_bottles" # $3
